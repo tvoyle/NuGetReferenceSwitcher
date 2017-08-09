@@ -6,9 +6,11 @@
 // <author>Rico Suter, mail@rsuter.com</author>
 //-----------------------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Windows.Threading;
 using EnvDTE;
 using MyToolkit.Collections;
@@ -89,6 +91,11 @@ namespace NuGetReferenceSwitcher.Presentation.Models
             _vsProject.References.AddProject(project._vsProject.Project);
         }
 
+        public void RemoveReference(ReferenceModel reference)
+        {
+        
+        }
+
         /// <summary>Saves the project. </summary>
         public void Save()
         {
@@ -104,6 +111,13 @@ namespace NuGetReferenceSwitcher.Presentation.Models
         /// <returns><c>true</c> when the file could be added.</returns>
         public bool AddReference(string assemblyPath)
         {
+
+            foreach (Reference reference in _vsProject.References)
+            {
+                // skip out early if there is still a reference
+                if (reference.Path.Equals(assemblyPath))
+                    return true;
+            }
             if (File.Exists(assemblyPath))
             {
                 _vsProject.References.Add(assemblyPath);
@@ -116,7 +130,14 @@ namespace NuGetReferenceSwitcher.Presentation.Models
         /// <param name="solution">The solution to remove the project from. </param>
         public void RemoveFromSolution(Solution solution)
         {
-            _vsProject.Refresh();
+            try
+            {
+                _vsProject.Refresh();
+            }
+            catch (Exception)
+            {
+                
+            }
             solution.Remove(_vsProject.Project);
         }
 
@@ -135,15 +156,14 @@ namespace NuGetReferenceSwitcher.Presentation.Models
             {
                 var lines = File.ReadAllLines(configurationPath)
                     .Select(l => l.Split('\t'))
-                    .Where(l => l.Length == 3).ToArray();
-
-                
+                    .Where(l => l.Length == 4).ToArray();
 
                 foreach (var line in lines)
                     list.Add(new FromProjectToNuGetTransformation {
                         FromProjectName = line[0],
                         FromProjectPath = PathUtilities.MakeAbsolute(line[1], configurationPath),
-                        ToAssemblyPath = PathUtilities.MakeAbsolute(line[2], configurationPath)
+                        ToAssemblyPath = PathUtilities.MakeAbsolute(line[2], configurationPath),
+                        Removed = bool.Parse(line[3])
                     });
             }
             return list;

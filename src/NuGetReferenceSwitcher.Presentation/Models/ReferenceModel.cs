@@ -6,7 +6,10 @@
 // <author>Rico Suter, mail@rsuter.com</author>
 //-----------------------------------------------------------------------
 
+using System;
 using VSLangProj;
+using System.Diagnostics;
+using System.Xml;
 
 namespace NuGetReferenceSwitcher.Presentation.Models
 {
@@ -34,10 +37,23 @@ namespace NuGetReferenceSwitcher.Presentation.Models
         /// <summary>Gets the referenced project name if this is a project reference otherwise null. </summary>
         public string ProjectName { get; private set; }
 
+        public bool Removed { get; private set; }
+
         /// <summary>Removes the reference from the project. </summary>
         public void Remove()
         {
-            _reference.Remove();
+            try
+            {
+                _reference.Remove();
+                Removed = true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    $"remove failed, attempting to remove from project file {_reference.ContainingProject.FileName}");
+                Removed = false;
+            }
+
         }
     }
 }

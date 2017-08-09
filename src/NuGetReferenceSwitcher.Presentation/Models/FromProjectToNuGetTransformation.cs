@@ -18,5 +18,7 @@ namespace NuGetReferenceSwitcher.Presentation.Models
 
         /// <summary>Gets or sets the NuGet assembly path name to switch to. </summary>
         public string ToAssemblyPath { get; set; }
+
+        public bool Removed { get; set; }
     }
 }

@@ -127,13 +127,13 @@ namespace NuGetReferenceSwitcher.Presentation.ViewModels
                             {
                                 var fromAssemblyPath = reference.Path;
                                 reference.Remove();
-
                                 project.AddProjectReference(assemblyToProjectSwitch.ToProject);
                                 nuGetReferenceTransformationsForProject +=
                                     assemblyToProjectSwitch.ToProject.Name + "\t" +
                                     PathUtilities.MakeRelative(assemblyToProjectSwitch.ToProject.Path,
                                         project.CurrentConfigurationPath) + "\t" +
-                                    PathUtilities.MakeRelative(fromAssemblyPath, project.CurrentConfigurationPath) +
+                                    PathUtilities.MakeRelative(fromAssemblyPath, project.CurrentConfigurationPath) + "\t" +
+                                    reference.Removed +
                                     "\n";                                
                             }
                             else
@@ -175,6 +175,8 @@ namespace NuGetReferenceSwitcher.Presentation.ViewModels
                 {
                     foreach (var transformation in project.CurrentToNuGetTransformations)
                     {
+                        if(!transformation.Removed)
+                            continue;
                         var reference = project.References
                             .FirstOrDefault(r => r.ProjectName == transformation.FromProjectName);
 
@@ -263,16 +265,18 @@ namespace NuGetReferenceSwitcher.Presentation.ViewModels
             if (RemoveProjects)
             {
                 var pathsOfProjectsToRemove = projectsToDelete.Select(p => p.Path);
-                var projectBuildOrder = ProjectDependencyResolver.GetBuildOrder(pathsOfProjectsToRemove).ToList();
-                var orderedProjectsToRemove = projectsToDelete
-                    .OrderByDescending(p => projectBuildOrder.IndexOf(p.Path)).Distinct().ToList();
+                //var temBuildOrder = ProjectDependencyResolver.GetBuildOrder(pathsOfProjectsToRemove);
+               // var projectBuildOrder = temBuildOrder.ToList();
+               // var orderedProjectsToRemove = projectsToDelete
+                //    .OrderByDescending(p => projectBuildOrder.IndexOf(p.Path)).Distinct().ToList();
 
-                foreach (var project in orderedProjectsToRemove)
+                foreach (var project in projectsToDelete)
                 {
                     if (project != null)
                         project.RemoveFromSolution(Application.Solution);
                 }
             }
         }
+
     }
 }
